@@ -11,7 +11,7 @@ plugins {
 
 group = "group.phorus"
 description = "Exception hierarchy with HTTP status codes and error codes for Kotlin/JVM services."
-version = "1.0.0"
+version = "1.0.1"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17

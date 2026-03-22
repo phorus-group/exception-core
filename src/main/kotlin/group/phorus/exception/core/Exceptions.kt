@@ -1,4 +1,4 @@
-package group.phorus.exception.handling
+package group.phorus.exception.core
 
 /**
  * Base class for all HTTP-mapped exceptions in the Phorus exception hierarchy.
