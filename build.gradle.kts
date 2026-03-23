@@ -27,7 +27,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 }
 
-configurations.matching { it.name.startsWith("dokka") }.configureEach {
+configurations.configureEach {
     resolutionStrategy.eachDependency {
         if (requested.group.startsWith("com.fasterxml.jackson")) {
             useVersion("2.18.6")
