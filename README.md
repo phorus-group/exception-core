@@ -41,7 +41,7 @@ Make sure `mavenCentral()` is in your repository list.
 <summary>Gradle / Kotlin DSL</summary>
 
 ```kotlin
-implementation("group.phorus:exception-core:1.0.1")
+implementation("group.phorus:exception-core:1.0.0")
 ```
 </details>
 
