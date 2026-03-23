@@ -52,7 +52,7 @@ implementation("group.phorus:exception-core:1.0.0")
 <dependency>
     <groupId>group.phorus</groupId>
     <artifactId>exception-core</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 </details>
