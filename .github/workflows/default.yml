@@ -18,6 +18,7 @@ jobs:
     with:
       disable-integration-test: true
       disable-unit-test: true
+      disable-version-validation: ${{ github.event_name != 'release' }}
       disable-publish: ${{ github.event_name != 'release' }}
       publish-task: publishToMavenCentral
       metadata-base-url: https://repo1.maven.org/maven2
