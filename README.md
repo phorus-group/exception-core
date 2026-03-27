@@ -11,7 +11,6 @@ Exception hierarchy with HTTP status codes and optional error codes for Kotlin/J
 > any found vulnerabilities will be fixed as soon as possible.
 
 > The project dependencies are being regularly updated by [Renovate](https://github.com/phorus-group/renovate).
-> Dependency updates that don't break tests will be automatically deployed with an updated patch version.
 
 ---
 
