@@ -32,6 +32,9 @@ configurations.configureEach {
         if (requested.group.startsWith("com.fasterxml.jackson")) {
             useVersion("2.18.6")
         }
+        if (requested.group == "org.bouncycastle") {
+            useVersion("1.84")
+        }
     }
 }
 
