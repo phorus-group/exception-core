@@ -11,6 +11,10 @@ package group.phorus.exception.core
  * - [source]: identifies the service that produced the error (e.g. `"user-service"`)
  * - [metadata]: arbitrary key-value pairs with extra context about the error
  *
+ * When [code] is `null`, the integration layer should fall back to [effectiveCode],
+ * which resolves to the reserved [ReservedErrorCodes] constant for the [statusCode]
+ * (for example `"BAD_REQUEST"` for status 400, `"NOT_FOUND"` for status 404).
+ *
  * This class is `open`, so consumers can create custom subclasses for HTTP statuses not
  * covered by the built-in types (e.g. 402 Payment Required, 423 Locked).
  *
@@ -26,7 +30,23 @@ open class BaseException(
     val code: String? = null,
     val source: String? = null,
     val metadata: Map<String, Any?>? = null,
-) : RuntimeException(message)
+) : RuntimeException(message) {
+
+    /**
+     * Resolved error code that is always non-null.
+     *
+     * Returns [code] when set, otherwise the reserved fallback for [statusCode] from
+     * [ReservedErrorCodes.forStatusCode]. For non-standard status codes (e.g. 402, 423)
+     * with no reserved constant, the result is [ReservedErrorCodes.INTERNAL_SERVER_ERROR]
+     * for 5xx and [ReservedErrorCodes.BAD_REQUEST] for any other unmapped class. Custom
+     * subclasses for non-mapped statuses are encouraged to pass an explicit [code].
+     */
+    val effectiveCode: String
+        get() = code
+            ?: ReservedErrorCodes.forStatusCode(statusCode)
+            ?: if (statusCode in 500..599) ReservedErrorCodes.INTERNAL_SERVER_ERROR
+            else ReservedErrorCodes.BAD_REQUEST
+}
 
 /** Returns HTTP 400 Bad Request */
 class BadRequest(message: String?, code: String? = null, source: String? = null, metadata: Map<String, Any?>? = null) : BaseException(message, 400, code, source, metadata)

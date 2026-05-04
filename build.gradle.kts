@@ -6,12 +6,12 @@ import java.time.LocalDate
 plugins {
     kotlin("jvm").version("2.3.10")
     id("org.jetbrains.dokka").version("2.1.0")
-    id("com.vanniktech.maven.publish") version "0.34.0"
+    id("com.vanniktech.maven.publish").version("0.34.0")
 }
 
 group = "group.phorus"
 description = "Exception hierarchy with HTTP status codes and error codes for Kotlin/JVM services."
-version = "1.0.1"
+version = "1.1.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -25,6 +25,15 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
+
+    testImplementation(kotlin("test"))
+    testImplementation(kotlin("reflect"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.11.4")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 configurations.configureEach {

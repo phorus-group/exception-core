@@ -3,7 +3,7 @@
 [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Maven Central](https://img.shields.io/maven-central/v/group.phorus/exception-core)](https://mvnrepository.com/artifact/group.phorus/exception-core)
 
-Exception hierarchy with HTTP status codes and optional error codes for Kotlin/JVM.
+Exception hierarchy with HTTP status codes and error codes for Kotlin/JVM.
 
 ### Notes
 
@@ -20,8 +20,11 @@ Exception hierarchy with HTTP status codes and optional error codes for Kotlin/J
 - [Getting started](#getting-started)
 - [Exception classes](#exception-classes)
 - [Error codes](#error-codes)
+- [Reserved error codes](#reserved-error-codes)
+- [`@ErrorCode` annotation](#errorcode-annotation)
 - [Source and metadata](#source-and-metadata)
 - [Custom exception classes](#custom-exception-classes)
+- [Migration](#migration)
 - [Building and contributing](#building-and-contributing)
 
 ---
@@ -32,6 +35,9 @@ Exception hierarchy with HTTP status codes and optional error codes for Kotlin/J
 an integer HTTP status code and an optional error code. Throw them from any layer of your
 application: controllers, services, message consumers, CLI commands, etc.
 
+The library also exposes the `ErrorCode` annotation, the `ReservedErrorCodes` object, and
+the `effectiveCode` property on `BaseException`. See the sections below.
+
 ## Getting started
 
 Make sure `mavenCentral()` is in your repository list.
@@ -40,7 +46,7 @@ Make sure `mavenCentral()` is in your repository list.
 <summary>Gradle / Kotlin DSL</summary>
 
 ```kotlin
-implementation("group.phorus:exception-core:1.0.0")
+implementation("group.phorus:exception-core:x.y.z")
 ```
 </details>
 
@@ -51,7 +57,7 @@ implementation("group.phorus:exception-core:1.0.0")
 <dependency>
     <groupId>group.phorus</groupId>
     <artifactId>exception-core</artifactId>
-    <version>1.0.0</version>
+    <version>x.y.z</version>
 </dependency>
 ```
 </details>
@@ -97,17 +103,97 @@ identification. Callers can use it to distinguish specific error conditions with
 HTTP status:
 
 ```kotlin
-// Without code (defaults to null)
+// Without explicit code (defaults to null)
 throw BadRequest("Invalid input")
 
-// With code
+// With explicit code
 throw BadRequest("Email format is invalid", code = "VALIDATION_EMAIL")
 throw BadRequest("Name exceeds 255 characters", code = "VALIDATION_NAME_LENGTH")
 throw Conflict("Email already exists", code = "USER_DUPLICATE_EMAIL")
 throw Forbidden("Trial expired", code = "PLAN_TRIAL_EXPIRED")
 ```
 
-`code` defaults to `null`.
+The `code` argument defaults to `null`. Independently, every exception exposes an
+`effectiveCode` property that is always non-null. When `code` is supplied, `effectiveCode`
+returns it. When `code` is `null`, `effectiveCode` returns the reserved constant for the
+exception's HTTP status (see below).
+
+```kotlin
+val ex = BadRequest("error")
+ex.code           // null
+ex.effectiveCode  // "BAD_REQUEST"
+
+val ex2 = BadRequest("Email format is invalid", code = "VALIDATION_EMAIL")
+ex2.code           // "VALIDATION_EMAIL"
+ex2.effectiveCode  // "VALIDATION_EMAIL"
+```
+
+Callers choose which property to read. `code` preserves the explicit-or-absent
+distinction. `effectiveCode` is convenient when a non-null string is always required.
+
+## Reserved error codes
+
+The `ReservedErrorCodes` object exposes a canonical list of constants that map one-to-one
+to the HTTP statuses covered by the 16 built-in `BaseException` subclasses, plus two meta
+codes that have no single HTTP status.
+
+| HTTP status | Reserved constant |
+|---|---|
+| 400 | `BAD_REQUEST` |
+| 401 | `UNAUTHORIZED` |
+| 403 | `FORBIDDEN` |
+| 404 | `NOT_FOUND` |
+| 405 | `METHOD_NOT_ALLOWED` |
+| 408 | `REQUEST_TIMEOUT` |
+| 409 | `CONFLICT` |
+| 410 | `GONE` |
+| 412 | `PRECONDITION_FAILED` |
+| 415 | `UNSUPPORTED_MEDIA_TYPE` |
+| 422 | `UNPROCESSABLE_ENTITY` |
+| 429 | `TOO_MANY_REQUESTS` |
+| 500 | `INTERNAL_SERVER_ERROR` |
+| 502 | `BAD_GATEWAY` |
+| 503 | `SERVICE_UNAVAILABLE` |
+| 504 | `GATEWAY_TIMEOUT` |
+
+`VALIDATION_FAILED` and `INTERNAL_SERVER_ERROR` do not map to a single HTTP status.
+`INTERNAL_SERVER_ERROR` is also reused as the fallback for any 5xx status without a more
+specific reserved constant.
+
+`ReservedErrorCodes.forStatusCode(statusCode)` returns the matching reserved constant for a
+given HTTP status, or `null` for unmapped statuses such as 402 or 423.
+
+```kotlin
+ReservedErrorCodes.forStatusCode(404)  // "NOT_FOUND"
+ReservedErrorCodes.forStatusCode(402)  // null
+```
+
+## `@ErrorCode` annotation
+
+`@ErrorCode` marks a property, field, or value parameter with an application-specific error
+code.
+
+```kotlin
+data class CreateUserRequest(
+    @field:ErrorCode("USER_NAME_BLANK")
+    val name: String?,
+
+    @field:ErrorCode("USER_EMAIL_INVALID")
+    val email: String?,
+)
+```
+
+The annotation has runtime retention so it can be read with reflection.
+
+```kotlin
+val annotation = MyClass::class.memberProperties
+    .first { it.name == "email" }
+    .annotations
+    .filterIsInstance<ErrorCode>()
+    .firstOrNull()
+
+annotation?.value  // "USER_EMAIL_INVALID"
+```
 
 ## Source and metadata
 
@@ -143,6 +229,10 @@ class Locked(message: String?, code: String? = null) :
 throw PaymentRequired("Subscription expired", code = "SUBSCRIPTION_EXPIRED")
 throw Locked("Resource is being edited by another user")
 ```
+
+For statuses that have no reserved constant, prefer passing an
+explicit `code` argument. When the code is omitted, `effectiveCode` resolves to
+`INTERNAL_SERVER_ERROR` for any 5xx status and `BAD_REQUEST` for any other unmapped class.
 
 ## Building and contributing
 
