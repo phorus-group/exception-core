@@ -21,10 +21,8 @@ Exception hierarchy with HTTP status codes and error codes for Kotlin/JVM.
 - [Exception classes](#exception-classes)
 - [Error codes](#error-codes)
 - [Reserved error codes](#reserved-error-codes)
-- [`@ErrorCode` annotation](#errorcode-annotation)
 - [Source and metadata](#source-and-metadata)
 - [Custom exception classes](#custom-exception-classes)
-- [Migration](#migration)
 - [Building and contributing](#building-and-contributing)
 
 ---
@@ -35,8 +33,8 @@ Exception hierarchy with HTTP status codes and error codes for Kotlin/JVM.
 an integer HTTP status code and an optional error code. Throw them from any layer of your
 application: controllers, services, message consumers, CLI commands, etc.
 
-The library also exposes the `ErrorCode` annotation, the `ReservedErrorCodes` object, and
-the `effectiveCode` property on `BaseException`. See the sections below.
+The library also exposes the `ReservedErrorCodes` object and the `effectiveCode` property
+on `BaseException`. See the sections below.
 
 ## Getting started
 
@@ -133,9 +131,21 @@ distinction. `effectiveCode` is convenient when a non-null string is always requ
 
 ## Reserved error codes
 
-The `ReservedErrorCodes` object exposes a canonical list of constants that map one-to-one
-to the HTTP statuses covered by the 16 built-in `BaseException` subclasses, plus two meta
-codes that have no single HTTP status.
+The `ReservedErrorCodes` object exposes a canonical list of constants. It groups them in
+three categories.
+
+**Meta codes**
+
+| Constant | Notes |
+|---|---|
+| `VALIDATION_FAILED` | Code for validation failures. |
+| `INTERNAL_SERVER_ERROR` | Fallback for any 5xx status without a specific reserved constant. |
+
+**HTTP class fallbacks**
+
+One per HTTP status covered by the built-in `BaseException` subclasses. Returned by
+`BaseException.effectiveCode` when the exception is thrown without an explicit `code`
+argument.
 
 | HTTP status | Reserved constant |
 |---|---|
@@ -156,43 +166,41 @@ codes that have no single HTTP status.
 | 503 | `SERVICE_UNAVAILABLE` |
 | 504 | `GATEWAY_TIMEOUT` |
 
-`VALIDATION_FAILED` and `INTERNAL_SERVER_ERROR` do not map to a single HTTP status.
-`INTERNAL_SERVER_ERROR` is also reused as the fallback for any 5xx status without a more
-specific reserved constant.
+**Constraint-derived codes**
 
-`ReservedErrorCodes.forStatusCode(statusCode)` returns the matching reserved constant for a
-given HTTP status, or `null` for unmapped statuses such as 402 or 423.
+One per Jakarta Bean Validation constraint annotation, plus directional codes for
+constraints with `min` and `max` sides. The constants are pure strings, exception-core
+itself does not depend on Jakarta validation.
+
+| Constant | Mirrors |
+|---|---|
+| `REQUIRED` | `@NotNull`, `@NotEmpty` |
+| `BLANK` | `@NotBlank` |
+| `MUST_BE_NULL` | `@Null` |
+| `TOO_SHORT` | `@Size`, `@Length` (Hibernate) when below `min` |
+| `TOO_LONG` | `@Size`, `@Length` (Hibernate) when above `max` |
+| `TOO_SMALL` | `@Min`, `@DecimalMin`, `@Range` (Hibernate) when below `min` |
+| `TOO_LARGE` | `@Max`, `@DecimalMax`, `@Range` (Hibernate) when above `max` |
+| `MUST_BE_POSITIVE` | `@Positive` |
+| `MUST_BE_POSITIVE_OR_ZERO` | `@PositiveOrZero` |
+| `MUST_BE_NEGATIVE` | `@Negative` |
+| `MUST_BE_NEGATIVE_OR_ZERO` | `@NegativeOrZero` |
+| `INVALID_NUMBER_FORMAT` | `@Digits` |
+| `INVALID_FORMAT` | `@Pattern` |
+| `INVALID_EMAIL` | `@Email` |
+| `MUST_BE_PAST` | `@Past` |
+| `MUST_BE_PAST_OR_PRESENT` | `@PastOrPresent` |
+| `MUST_BE_FUTURE` | `@Future` |
+| `MUST_BE_FUTURE_OR_PRESENT` | `@FutureOrPresent` |
+| `MUST_BE_TRUE` | `@AssertTrue` |
+| `MUST_BE_FALSE` | `@AssertFalse` |
+
+`ReservedErrorCodes.forStatusCode(statusCode)` returns the matching HTTP-class fallback
+constant for a given HTTP status, or `null` for unmapped statuses such as 402 or 423.
 
 ```kotlin
 ReservedErrorCodes.forStatusCode(404)  // "NOT_FOUND"
 ReservedErrorCodes.forStatusCode(402)  // null
-```
-
-## `@ErrorCode` annotation
-
-`@ErrorCode` marks a property, field, or value parameter with an application-specific error
-code.
-
-```kotlin
-data class CreateUserRequest(
-    @field:ErrorCode("USER_NAME_BLANK")
-    val name: String?,
-
-    @field:ErrorCode("USER_EMAIL_INVALID")
-    val email: String?,
-)
-```
-
-The annotation has runtime retention so it can be read with reflection.
-
-```kotlin
-val annotation = MyClass::class.memberProperties
-    .first { it.name == "email" }
-    .annotations
-    .filterIsInstance<ErrorCode>()
-    .firstOrNull()
-
-annotation?.value  // "USER_EMAIL_INVALID"
 ```
 
 ## Source and metadata

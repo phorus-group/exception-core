@@ -32,6 +32,30 @@ class ReservedErrorCodesTest {
     }
 
     @Test
+    fun `constraint-derived constants carry the documented strings`() {
+        assertEquals("REQUIRED", ReservedErrorCodes.REQUIRED)
+        assertEquals("BLANK", ReservedErrorCodes.BLANK)
+        assertEquals("MUST_BE_NULL", ReservedErrorCodes.MUST_BE_NULL)
+        assertEquals("TOO_SHORT", ReservedErrorCodes.TOO_SHORT)
+        assertEquals("TOO_LONG", ReservedErrorCodes.TOO_LONG)
+        assertEquals("TOO_SMALL", ReservedErrorCodes.TOO_SMALL)
+        assertEquals("TOO_LARGE", ReservedErrorCodes.TOO_LARGE)
+        assertEquals("MUST_BE_POSITIVE", ReservedErrorCodes.MUST_BE_POSITIVE)
+        assertEquals("MUST_BE_POSITIVE_OR_ZERO", ReservedErrorCodes.MUST_BE_POSITIVE_OR_ZERO)
+        assertEquals("MUST_BE_NEGATIVE", ReservedErrorCodes.MUST_BE_NEGATIVE)
+        assertEquals("MUST_BE_NEGATIVE_OR_ZERO", ReservedErrorCodes.MUST_BE_NEGATIVE_OR_ZERO)
+        assertEquals("INVALID_NUMBER_FORMAT", ReservedErrorCodes.INVALID_NUMBER_FORMAT)
+        assertEquals("INVALID_FORMAT", ReservedErrorCodes.INVALID_FORMAT)
+        assertEquals("INVALID_EMAIL", ReservedErrorCodes.INVALID_EMAIL)
+        assertEquals("MUST_BE_PAST", ReservedErrorCodes.MUST_BE_PAST)
+        assertEquals("MUST_BE_PAST_OR_PRESENT", ReservedErrorCodes.MUST_BE_PAST_OR_PRESENT)
+        assertEquals("MUST_BE_FUTURE", ReservedErrorCodes.MUST_BE_FUTURE)
+        assertEquals("MUST_BE_FUTURE_OR_PRESENT", ReservedErrorCodes.MUST_BE_FUTURE_OR_PRESENT)
+        assertEquals("MUST_BE_TRUE", ReservedErrorCodes.MUST_BE_TRUE)
+        assertEquals("MUST_BE_FALSE", ReservedErrorCodes.MUST_BE_FALSE)
+    }
+
+    @Test
     fun `forStatusCode returns the matching reserved constant`() {
         assertEquals("BAD_REQUEST", ReservedErrorCodes.forStatusCode(400))
         assertEquals("UNAUTHORIZED", ReservedErrorCodes.forStatusCode(401))
