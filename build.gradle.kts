@@ -39,7 +39,7 @@ tasks.withType<Test> {
 configurations.configureEach {
     resolutionStrategy.eachDependency {
         if (requested.group.startsWith("com.fasterxml.jackson")) {
-            useVersion("2.18.6")
+            useVersion("2.18.8")
         }
         if (requested.group == "org.bouncycastle") {
             useVersion("1.84")
